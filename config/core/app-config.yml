@@ -5,7 +5,7 @@ version: v0.1.0
 
 dev:
   files_app_dir: site
-  app_path: /ai/app
+  app_path: /ai/app/
   api_path: /ai/api/
   end_points:
     - id: chat
