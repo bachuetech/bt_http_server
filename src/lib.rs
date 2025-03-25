@@ -47,18 +47,18 @@ async fn graceful_shutdown() {
     log_info!("graceful_shutdown","Shutting down server...");
 }
 
-fn generate_html() -> String {
+pub fn generate_html() -> String {
     let static_app_url = STATIC_APP_URL.read().unwrap();
     format!("<!DOCTYPE html><html><head><title>BachueTech</title></head><body><h1>Bachuetech AI</h1><br/><h2>Open {}/</h2></body></html>",&static_app_url )
 }
 
-async fn default_handler() -> impl IntoResponse { //Redirect {
+pub async fn default_handler() -> impl IntoResponse { //Redirect {
     log_trace!("handler","Default root.");
     let html_txt = generate_html(); 
     Html(html_txt)
 }
 
-async fn fallback_root(uri: Uri) -> impl IntoResponse {
+pub async fn fallback_root(uri: Uri) -> impl IntoResponse {
     log_trace!("fallback", "Redirecting to default page. Page not found: {}", uri);
     Redirect::temporary("/")
 }
