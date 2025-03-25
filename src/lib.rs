@@ -2,7 +2,7 @@ use std::sync::RwLock;
 
 use axum::{http::Uri, response::{Html, IntoResponse, Redirect}, Router};
 use bt_core_config::app_config::AppConfig;
-use bt_logger::{log_fatal, log_info, log_trace};
+use bt_logger::{log_fatal, log_info, log_trace, log_verbose};
 use server::get_server_listener;
 use tokio::signal;
 use lazy_static::lazy_static;
@@ -23,10 +23,13 @@ pub async fn server_start(app_configuration:  &AppConfig, routes: Router){
     set_static_app_url(current_app_url.clone());
     log_info!("main","Welcome to {} {}. To start open {}",app_configuration.get_app_name(),app_configuration.get_version(), &current_app_url);
 
+    log_verbose!("server_start","Routes {:?}",routes);
     let server = axum::serve(svr_params.svr_listener, routes).with_graceful_shutdown(graceful_shutdown());
    
     if let Err(err) = server.await{
-        log_fatal!("main","Web Server error: {}", err);
+        log_fatal!("server_start","Web Server Error: {}", err);
+    }else{
+        log_info!("server_start","Good bye!");
     }
 }
 
