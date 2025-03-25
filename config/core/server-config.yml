@@ -1,0 +1,11 @@
+dev:
+  server:
+    host: 0.0.0.0
+    port: 3001
+    secure: false
+secure:
+  server:
+    host: 0.0.0.0
+    port: 3001
+    secure: true
+  

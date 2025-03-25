@@ -1,0 +1,17 @@
+# app_config.yml
+app_name: BACHUETECH HTTP SERVER
+version: v0.1.0
+# environment: dev
+
+dev:
+  files_app_dir: site
+  app_path: /ai/app
+  api_path: /ai/api/
+  end_points:
+    - id: chat
+      path: /chat
+    - id: prompt
+      path: /prompt
+    - id: models
+      path: /models
+secure:
