@@ -42,10 +42,42 @@ fn set_static_app_url(value: String) {
     *static_value = value;
 }
 
-// Graceful shutdown handler
+/// Graceful shutdown handler
 async fn graceful_shutdown() {
     // Wait for a termination signal (Ctrl+C, SIGTERM, etc.)
-    signal::ctrl_c().await.unwrap();
+    //signal::ctrl_c().await.unwrap();
+    let ctrl_c = async {
+        signal::ctrl_c()
+            .await
+            .expect("failed to install Ctrl+C handler");
+    };
+
+    #[cfg(unix)]
+    let terminate = async {
+        signal::unix::signal(signal::unix::SignalKind::terminate())
+            .expect("failed to install terminate signal handler")
+            .recv()
+            .await;
+    };
+
+    #[cfg(unix)]
+    let quit = async {
+        signal::unix::signal(signal::unix::SignalKind::quit())
+            .expect("failed to install quit signal handler")
+            .recv()
+            .await;
+    };
+
+    #[cfg(not(unix))]
+    let terminate = std::future::pending::<()>();
+
+    // Now, trigger the standard graceful shutdown
+    tokio::select! {
+        _ = ctrl_c => {log_info!("graceful_shutdown","CTRL-C Received");},
+        _ = terminate => {log_info!("graceful_shutdown","Shutdown/Stop signal Received");},
+        _ = quit => {log_info!("graceful_shutdown","Quite signal Received");}
+    }
+
     log_info!("graceful_shutdown","Shutting down server...");
 }
 
@@ -54,6 +86,7 @@ pub fn generate_html() -> String {
     format!("<!DOCTYPE html><html><head><title>BachueTech</title></head><body><h1>Bachuetech AI</h1><br/><h2>Open <a href=\"{}\">{}</a></h2></body></html>",&static_app_url,&static_app_url )
 }
 
+///Default handler open Root with default message with link to APP.
 pub async fn default_handler() -> impl IntoResponse { //Redirect {
     log_trace!("handler","Default root.");
     let html_txt = generate_html(); 
@@ -65,6 +98,12 @@ pub async fn fallback_root(uri: Uri) -> impl IntoResponse {
     Redirect::temporary("/")
 }
 
+
+
+
+//***********/
+// UNIT TEST 
+//***********/
 #[cfg(test)]
 mod tests_http {
     use axum::{routing::get, Router};

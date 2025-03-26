@@ -34,6 +34,9 @@ pub async fn get_server_listener(app_configuration: &AppConfig) -> ServerParams{
     }
 }
 
+//***********/
+// UNIT TEST 
+//***********/
 #[cfg(test)]
 mod tests_server {
     use bt_core_config::app_config::AppConfig;
