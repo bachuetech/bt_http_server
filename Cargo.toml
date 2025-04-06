@@ -8,7 +8,7 @@ description = "Start Application Server (HTTP Service)"
 [dependencies]
 axum = "0.8.1"
 bt_app_codes = { git = "https://github.com/bachuetech/bt_app_codes.git", version = "0.1.0" }
-bt_core_config = { git = "https://github.com/bachuetech/bt_core_config.git", version = "0.1.2" }
+bt_core_config = { git = "https://github.com/bachuetech/bt_core_config.git", version = "0.1.3" }
 bt_logger = "0.2.2"
 lazy_static = "1.5.0"
 tokio = { version = "1.44.1", features = ["full"] }

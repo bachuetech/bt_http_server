@@ -75,7 +75,7 @@ async fn graceful_shutdown() {
     tokio::select! {
         _ = ctrl_c => {log_info!("graceful_shutdown","CTRL-C Received");},
         _ = terminate => {log_info!("graceful_shutdown","Shutdown/Stop signal Received");},
-        _ = quit => {log_info!("graceful_shutdown","Quite signal Received");}
+        _ = quit => {log_info!("graceful_shutdown","Quite signal Received");},
     }
 
     log_info!("graceful_shutdown","Shutting down server...");

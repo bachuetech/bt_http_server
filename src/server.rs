@@ -46,30 +46,31 @@ mod tests_server {
 
 
     #[tokio::test]
-    async fn test_success_listener() {
+    async fn test_success_listener_dev() {
         build_logger("BACHUETECH", "BT.HTTP_SERVER", LogLevel::VERBOSE, LogTarget::STD_ERROR );
         let ac = AppConfig::new(Some("dev".to_owned()));
         let l = get_server_listener(&ac).await;
-        assert_eq!(l.svr_port,3001);
+        assert_eq!(l.svr_port,3002);
         assert_eq!(l.svr_secure,false);
 
+    }
+
+    #[tokio::test]
+    async fn test_success_listener_dsecure() {
+        build_logger("BACHUETECH", "BT.HTTP_SERVER", LogLevel::VERBOSE, LogTarget::STD_ERROR );
+        let ac = AppConfig::new(Some("secure".to_owned()));
+        let l = get_server_listener(&ac).await;
+        assert_eq!(l.svr_port,3003);
+        assert_eq!(l.svr_secure,true);
     }
 
     #[tokio::test]
     async fn test_success_listener_defaults() {
         build_logger("BACHUETECH", "BT.HTTP_SERVER", LogLevel::VERBOSE, LogTarget::STD_ERROR );
-        let ac = AppConfig::new(Some("secure".to_owned()));
+        let ac = AppConfig::new(Some("unknown".to_owned()));
         let l = get_server_listener(&ac).await;
         assert_eq!(l.svr_port,3001);
         assert_eq!(l.svr_secure,true);
     }
-
-    #[tokio::test]
-    async fn test_success_listener_dev() {
-        build_logger("BACHUETECH", "BT.HTTP_SERVER", LogLevel::VERBOSE, LogTarget::STD_ERROR );
-        let ac = AppConfig::new(Some("dev".to_owned()));
-        let l = get_server_listener(&ac).await;
-        assert_eq!(l.svr_port,3001);
-        assert_eq!(l.svr_secure,false);
-    }    
+  
 }
