@@ -12,7 +12,7 @@ pub(crate) struct ServerParams{
     pub svr_port: u16,
 }
 
-pub async fn get_server_listener(app_configuration: &AppConfig) -> ServerParams{
+pub(crate) async fn get_server_listener(app_configuration: &AppConfig) -> ServerParams{
     //let app_configuration = AppConfig::new(running_environment);
     let srv_config = get_srv_config(app_configuration.get_environment()); 
 

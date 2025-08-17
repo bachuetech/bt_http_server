@@ -9,7 +9,7 @@ use lazy_static::lazy_static;
 
 mod server;
 
-pub async fn server_start(app_configuration:  &AppConfig, routes: Router){
+pub async fn server_start(app_configuration:  &AppConfig, routes: Router, func_shutdown: Option<fn()>){
     log_info!("server_start","Starting {} {}",app_configuration.get_app_name(),app_configuration.get_version());
     
     let svr_params = get_server_listener(&app_configuration).await;
@@ -23,7 +23,7 @@ pub async fn server_start(app_configuration:  &AppConfig, routes: Router){
     set_static_app_url(current_app_url.clone());
     log_info!("main","Welcome to {} {}. To start open {}",app_configuration.get_app_name(),app_configuration.get_version(), &current_app_url);
 
-    let server = axum::serve(svr_params.svr_listener, routes).with_graceful_shutdown(graceful_shutdown());
+    let server = axum::serve(svr_params.svr_listener, routes).with_graceful_shutdown(graceful_shutdown(func_shutdown));
    
     if let Err(err) = server.await{
         log_fatal!("server_start","Web Server Error: {}", err);
@@ -43,7 +43,7 @@ fn set_static_app_url(value: String) {
 }
 
 /// Graceful shutdown handler
-async fn graceful_shutdown() {
+async fn graceful_shutdown(func_shutdown: Option<fn()>) {
     // Wait for a termination signal (Ctrl+C, SIGTERM, etc.)
     //signal::ctrl_c().await.unwrap();
     let ctrl_c = async {
@@ -73,28 +73,49 @@ async fn graceful_shutdown() {
 
     // Now, trigger the standard graceful shutdown
     tokio::select! {
-        _ = ctrl_c => {log_info!("graceful_shutdown","CTRL-C Received");},
-        _ = terminate => {log_info!("graceful_shutdown","Shutdown/Stop signal Received");},
-        _ = quit => {log_info!("graceful_shutdown","Quite signal Received");},
+        _ = ctrl_c => {log_info!("graceful_shutdown","CTRL-C Received");
+                        if let Some(func) = func_shutdown{
+                            func();
+                        }
+                      },
+        _ = terminate => {log_info!("graceful_shutdown","Shutdown/Stop signal Received");
+                            if let Some(func) = func_shutdown{
+                               func();
+                            }
+                        },
+        _ = quit => {log_info!("graceful_shutdown","Quite signal Received");
+                        if let Some(func) = func_shutdown{
+                            func();
+                        }        
+                    },
     }
 
     log_info!("graceful_shutdown","Shutting down server...");
 }
 
+
+#[deprecated(since = "0.2.0", note = "Use `generate_default_html` instead")]
 pub fn generate_html() -> String {
     let static_app_url = STATIC_APP_URL.read().unwrap();
     format!("<!DOCTYPE html><html><head><title>BachueTech</title></head><body><h1>Bachuetech AI</h1><br/><h2>Open <a href=\"{}\">{}</a></h2></body></html>",&static_app_url,&static_app_url )
 }
 
+pub(crate) fn generate_default_html() -> String {
+    let static_app_url = STATIC_APP_URL.read().unwrap();
+    format!("<!DOCTYPE html><html><head><title>BachueTech</title></head><body><h1>Bachuetech AI</h1><br/><h2>Open <a href=\"{}\">{}</a></h2></body></html>",&static_app_url,&static_app_url )
+}
+
 ///Default handler open Root with default message with link to APP.
+/// Arguements:
+/// f_def_html: Function to return a default html page. Must return a String with the HTML.
 pub async fn default_handler() -> impl IntoResponse { //Redirect {
     log_trace!("handler","Default root.");
-    let html_txt = generate_html(); 
+    let html_txt = generate_default_html();
     Html(html_txt)
 }
 
 pub async fn fallback_root(uri: Uri) -> impl IntoResponse {
-    log_trace!("fallback", "Redirecting to default page. Page not found: {}", uri);
+    log_trace!("fallback", "Redirecting to default (root) page. Page not found: {}", uri);
     Redirect::temporary("/")
 }
 
@@ -112,13 +133,16 @@ mod tests_http {
 
     use crate::{default_handler, fallback_root, server_start};
 
+    fn func_shutdown(){
+        println!("EXECUTING Shutdown functions!!");
+    }
 
     #[tokio::test]
     async fn test_websvr_defaults() {
         build_logger("BACHUETECH", "BT.HTTP_SERVER", LogLevel::VERBOSE, LogTarget::STD_ERROR );
         let ac = AppConfig::new(Some("secure".to_owned()));
         let r = Router::new().route("/", get(default_handler)).fallback(fallback_root);
-        server_start(&ac,r).await;
+        server_start(&ac,r, None).await;
     }
 
     #[tokio::test]
@@ -126,6 +150,6 @@ mod tests_http {
         build_logger("BACHUETECH", "BT.HTTP_SERVER", LogLevel::VERBOSE, LogTarget::STD_ERROR );
         let ac = AppConfig::new(Some("dev".to_owned()));
         let r = Router::new().route("/", get(default_handler)).fallback(fallback_root);
-        server_start(&ac,r).await;
+        server_start(&ac,r, Some(func_shutdown)).await;
     }
 }
