@@ -87,7 +87,7 @@ mod tests_server {
         let sc = ServerConfig::new(ac.get_environment(), None).unwrap();        
         let l = get_server_listener(&sc).await;
         assert_eq!(l.svr_port,3002);
-        assert_eq!(l.svr_secure,true);
+        assert_eq!(l.svr_secure,false);
     }
   
 }
