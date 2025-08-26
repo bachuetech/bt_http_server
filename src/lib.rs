@@ -1,7 +1,7 @@
 use std::sync::RwLock;
 
 use axum::{http::Uri, response::{Html, IntoResponse, Redirect}, Router};
-use bt_core_config::app_config::AppConfig;
+use bt_core_config::{app_config::AppConfig, server_config::ServerConfig};
 use bt_logger::{log_fatal, log_info, log_trace};
 use server::get_server_listener;
 use tokio::signal;
@@ -9,10 +9,11 @@ use lazy_static::lazy_static;
 
 mod server;
 
-pub async fn server_start(app_configuration:  &AppConfig, routes: Router, func_shutdown: Option<fn()>){
+pub async fn server_start(app_configuration:  &AppConfig, server_config: &ServerConfig, routes: Router, func_shutdown: Option<fn()>, ){
     log_info!("server_start","Starting {} {}",app_configuration.get_app_name(),app_configuration.get_version());
     
-    let svr_params = get_server_listener(&app_configuration).await;
+    //let svr_params = get_server_listener(&app_configuration).await;
+    let svr_params = get_server_listener(server_config).await;
     let app_path = app_configuration.get_app_path();
 
     let current_app_url = if svr_params.svr_secure {
@@ -128,7 +129,7 @@ pub async fn fallback_root(uri: Uri) -> impl IntoResponse {
 #[cfg(test)]
 mod tests_http {
     use axum::{routing::get, Router};
-    use bt_core_config::app_config::AppConfig;
+    use bt_core_config::{app_config::AppConfig, app_info::AppInfo, server_config::ServerConfig};
     use bt_logger::{build_logger, LogLevel, LogTarget};
 
     use crate::{default_handler, fallback_root, server_start};
@@ -140,16 +141,22 @@ mod tests_http {
     #[tokio::test]
     async fn test_websvr_defaults() {
         build_logger("BACHUETECH", "BT.HTTP_SERVER", LogLevel::VERBOSE, LogTarget::STD_ERROR );
-        let ac = AppConfig::new(Some("secure".to_owned()));
+        let app_info = AppInfo::get_app_info("AppName", "default_version", "Bachuetech", "Core Test");
+        //const YML_CONTENT: &str = include_str!("../config/core/app-config.yml");          
+        let ac = AppConfig::new(Some("secure".to_owned()), &app_info, None).unwrap();
+        let sc = ServerConfig::new(ac.get_environment(), None).unwrap();          
         let r = Router::new().route("/", get(default_handler)).fallback(fallback_root);
-        server_start(&ac,r, None).await;
+        server_start(&ac, &sc, r, None).await;
     }
 
     #[tokio::test]
     async fn test_websvr_dev() {
         build_logger("BACHUETECH", "BT.HTTP_SERVER", LogLevel::VERBOSE, LogTarget::STD_ERROR );
-        let ac = AppConfig::new(Some("dev".to_owned()));
-        let r = Router::new().route("/", get(default_handler)).fallback(fallback_root);
-        server_start(&ac,r, Some(func_shutdown)).await;
+        let app_info = AppInfo::get_app_info("AppName", "default_version", "Bachuetech", "Core Test");
+        //const YML_CONTENT: &str = include_str!("../config/core/app-config.yml");           
+        let ac = AppConfig::new(Some("dev".to_owned()), &app_info, None).unwrap();
+        let sc = ServerConfig::new(ac.get_environment(), None).unwrap();         
+        let r = Router::new().route("/", get(default_handler)).fallback(fallback_root);        
+        server_start(&ac,&sc, r, Some(func_shutdown)).await;
     }
 }
