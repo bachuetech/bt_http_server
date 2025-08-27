@@ -1,15 +1,15 @@
-use std::{error::Error, sync::RwLock};
+use std::{error::Error, sync::RwLock, time::Duration};
 
 use axum::{http::Uri, response::{Html, IntoResponse, Redirect}, Router};
 use bt_core_config::{app_config::AppConfig, server_config::ServerConfig};
 use bt_logger::{log_info, log_trace};
 use server::get_server_listener;
-use tokio::signal;
+use tokio::{signal, time::sleep};
 use lazy_static::lazy_static;
 
 mod server;
 
-pub async fn server_start(app_configuration:  &AppConfig, server_config: &ServerConfig, routes: Router, func_shutdown: Option<fn()>, ) -> Result<(), Box<dyn Error>>
+pub async fn server_start(app_configuration:  &AppConfig, server_config: &ServerConfig, routes: Router, func_shutdown: Option<fn() -> i64>) -> Result<(), Box<dyn Error>>
 {
     log_info!("server_start","Starting {} {}",app_configuration.get_app_name(),app_configuration.get_version());
     
@@ -50,7 +50,7 @@ fn set_static_app_url(value: String) {
 }
 
 /// Graceful shutdown handler
-async fn graceful_shutdown(func_shutdown: Option<fn()>) {
+async fn graceful_shutdown(func_shutdown: Option<fn() -> i64>) {
     // Wait for a termination signal (Ctrl+C, SIGTERM, etc.)
     //signal::ctrl_c().await.unwrap();
     let ctrl_c = async {
@@ -79,22 +79,28 @@ async fn graceful_shutdown(func_shutdown: Option<fn()>) {
     let terminate = std::future::pending::<()>();
 
     // Now, trigger the standard graceful shutdown
+    let mut result = 0;
     tokio::select! {
         _ = ctrl_c => {log_info!("graceful_shutdown","CTRL-C Received");
                         if let Some(func) = func_shutdown{
-                            func();
+                            result = func();
                         }
                       },
         _ = terminate => {log_info!("graceful_shutdown","Shutdown/Stop signal Received");
                             if let Some(func) = func_shutdown{
-                               func();
+                               result = func();
                             }
                         },
         _ = quit => {log_info!("graceful_shutdown","Quite signal Received");
                         if let Some(func) = func_shutdown{
-                            func();
+                            result = func();
                         }        
                     },
+    }
+
+    if result > 0 {
+        log_info!("graceful_shutdown","waiting {} ms for other tasks to finish",result);
+        sleep(Duration::from_millis(result.try_into().unwrap())).await;
     }
 
     log_info!("graceful_shutdown","Shutting down server...");
@@ -136,12 +142,18 @@ pub async fn fallback_root(uri: Uri) -> impl IntoResponse {
 mod tests_http {
     use axum::{routing::get, Router};
     use bt_core_config::{app_config::AppConfig, app_info::AppInfo, server_config::ServerConfig};
-    use bt_logger::{build_logger, LogLevel, LogTarget};
+    use bt_logger::{build_logger, log_error, LogLevel, LogTarget};
 
     use crate::{default_handler, fallback_root, server_start};
 
-    fn func_shutdown(){
+    fn func_shutdown() -> i64{
         println!("EXECUTING Shutdown functions!!");
+        0
+    }
+
+    fn func_shutdown_w_wait() -> i64{
+        println!("EXECUTING Shutdown functions!!");
+        2000
     }
 
     #[tokio::test]
@@ -158,6 +170,19 @@ mod tests_http {
     }
 
     #[tokio::test]
+    async fn test_websvr_w_wait_defaults() {
+        build_logger("BACHUETECH", "BT.HTTP_SERVER", LogLevel::VERBOSE, LogTarget::STD_ERROR );
+        let app_info = AppInfo::get_app_info("AppName", "default_version", "Bachuetech", "Core Test");
+        //const YML_CONTENT: &str = include_str!("../config/core/app-config.yml");          
+        let ac = AppConfig::new(Some("secure".to_owned()), &app_info, None).unwrap();
+        let sc = ServerConfig::new(ac.get_environment(), None).unwrap();          
+        let r = Router::new().route("/", get(default_handler)).fallback(fallback_root);
+        let s = server_start(&ac, &sc, r, Some(func_shutdown_w_wait)).await;
+
+        assert!(s.is_ok())
+    }
+
+    #[tokio::test]
     async fn test_websvr_dev() {
         build_logger("BACHUETECH", "BT.HTTP_SERVER", LogLevel::VERBOSE, LogTarget::STD_ERROR );
         let app_info = AppInfo::get_app_info("AppName", "default_version", "Bachuetech", "Core Test");
@@ -166,6 +191,8 @@ mod tests_http {
         let sc = ServerConfig::new(ac.get_environment(), None).unwrap();         
         let r = Router::new().route("/", get(default_handler)).fallback(fallback_root);        
         let s = server_start(&ac,&sc, r, Some(func_shutdown)).await;
+        //let err = s.unwrap_err();
+        //log_error!("test_websvr_dev","Err: {}",err);
 
         assert!(s.is_ok())
     }
