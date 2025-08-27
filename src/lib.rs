@@ -1,36 +1,42 @@
-use std::sync::RwLock;
+use std::{error::Error, sync::RwLock};
 
 use axum::{http::Uri, response::{Html, IntoResponse, Redirect}, Router};
 use bt_core_config::{app_config::AppConfig, server_config::ServerConfig};
-use bt_logger::{log_fatal, log_info, log_trace};
+use bt_logger::{log_info, log_trace};
 use server::get_server_listener;
 use tokio::signal;
 use lazy_static::lazy_static;
 
 mod server;
 
-pub async fn server_start(app_configuration:  &AppConfig, server_config: &ServerConfig, routes: Router, func_shutdown: Option<fn()>, ){
+pub async fn server_start(app_configuration:  &AppConfig, server_config: &ServerConfig, routes: Router, func_shutdown: Option<fn()>, ) -> Result<(), Box<dyn Error>>
+{
     log_info!("server_start","Starting {} {}",app_configuration.get_app_name(),app_configuration.get_version());
     
     //let svr_params = get_server_listener(&app_configuration).await;
-    let svr_params = get_server_listener(server_config).await;
+    let svr_params = get_server_listener(server_config).await?;
     let app_path = app_configuration.get_app_path();
 
+    
+    let tmp_hostname = server_config.get_host().trim().to_owned();
+    let hostname = if tmp_hostname.eq_ignore_ascii_case("0.0.0.0") {"localhost".to_owned()} else {tmp_hostname};
+    
     let current_app_url = if svr_params.svr_secure {
-        format!("https://localhost:{}{}",&svr_params.svr_port,&app_path)
+        format!("https://{}:{}{}",&hostname, &svr_params.svr_port,&app_path)
     }else{
-        format!("http://localhost:{}{}",&svr_params.svr_port, &app_path)
+        format!("http://{}:{}{}",&hostname, &svr_params.svr_port, &app_path)
     };
     set_static_app_url(current_app_url.clone());
     log_info!("main","Welcome to {} {}. To start open {}",app_configuration.get_app_name(),app_configuration.get_version(), &current_app_url);
 
     let server = axum::serve(svr_params.svr_listener, routes).with_graceful_shutdown(graceful_shutdown(func_shutdown));
-   
-    if let Err(err) = server.await{
-        log_fatal!("server_start","Web Server Error: {}", err);
-    }else{
-        log_info!("server_start","Good bye!");
-    }
+    server.await?;
+    //if let Err(err) = server.await{
+    //    log_fatal!("server_start","Web Server Error: {}", err);
+    //}else{
+    log_info!("server_start","Good bye!");
+    //}
+    Ok(())
 }
 
 lazy_static! {
@@ -146,7 +152,9 @@ mod tests_http {
         let ac = AppConfig::new(Some("secure".to_owned()), &app_info, None).unwrap();
         let sc = ServerConfig::new(ac.get_environment(), None).unwrap();          
         let r = Router::new().route("/", get(default_handler)).fallback(fallback_root);
-        server_start(&ac, &sc, r, None).await;
+        let s = server_start(&ac, &sc, r, None).await;
+
+        assert!(s.is_ok())
     }
 
     #[tokio::test]
@@ -157,6 +165,23 @@ mod tests_http {
         let ac = AppConfig::new(Some("dev".to_owned()), &app_info, None).unwrap();
         let sc = ServerConfig::new(ac.get_environment(), None).unwrap();         
         let r = Router::new().route("/", get(default_handler)).fallback(fallback_root);        
-        server_start(&ac,&sc, r, Some(func_shutdown)).await;
+        let s = server_start(&ac,&sc, r, Some(func_shutdown)).await;
+
+        assert!(s.is_ok())
     }
+
+    /*#[tokio::test]
+    async fn test_websvr_twotimes_dev_control_err() {
+        build_logger("BACHUETECH", "BT.HTTP_SERVER", LogLevel::VERBOSE, LogTarget::STD_ERROR );
+        let app_info = AppInfo::get_app_info("AppName", "default_version", "Bachuetech", "Core Test");
+        //const YML_CONTENT: &str = include_str!("../config/core/app-config.yml");           
+        let ac = AppConfig::new(Some("dev".to_owned()), &app_info, None).unwrap();
+        let sc = ServerConfig::new(ac.get_environment(), None).unwrap();         
+        let r1 = Router::new().route("/", get(default_handler)).fallback(fallback_root);        
+        let r2 = Router::new().route("/", get(default_handler)).fallback(fallback_root);         
+        let s1 = server_start(&ac,&sc, r1, Some(func_shutdown)).await;
+        let s2 = server_start(&ac,&sc, r2, Some(func_shutdown)).await;
+        assert!(s1.is_ok());
+        assert!(s2.is_err());
+    }*/
 }
