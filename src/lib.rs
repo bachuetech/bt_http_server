@@ -67,13 +67,14 @@ async fn graceful_shutdown(func_shutdown: Option<fn() -> i64>) {
             .await;
     };
 
-    #[cfg(unix)]
+    //Removed due to issue with windows
+    /*#[cfg(unix)]
     let quit = async {
         signal::unix::signal(signal::unix::SignalKind::quit())
             .expect("failed to install quit signal handler")
             .recv()
             .await;
-    };
+    };*/
 
     #[cfg(not(unix))]
     let terminate = std::future::pending::<()>();
@@ -91,11 +92,11 @@ async fn graceful_shutdown(func_shutdown: Option<fn() -> i64>) {
                                result = func();
                             }
                         },
-        _ = quit => {log_info!("graceful_shutdown","Quite signal Received");
+        /*_ = quit => {log_info!("graceful_shutdown","Quite signal Received");
                         if let Some(func) = func_shutdown{
                             result = func();
                         }        
-                    },
+                    },*/
     }
 
     if result > 0 {
