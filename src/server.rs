@@ -55,11 +55,11 @@ mod tests_server {
 
     #[tokio::test]
     async fn test_success_listener_dev() {
-        build_logger("BACHUETECH", "BT.HTTP_SERVER", LogLevel::VERBOSE, LogTarget::STD_ERROR );
+        build_logger("BACHUETECH", "BT.HTTP_SERVER", LogLevel::VERBOSE, LogTarget::STD_ERROR, None );
         let app_info = AppInfo::get_app_info("AppName", "default_version", "Bachuetech", "Core Test");
         //const YML_CONTENT: &str = include_str!("../config/core/app-config.yml");         
         let ac = AppConfig::new(Some("dev".to_owned()), &app_info, None).unwrap();
-        let sc = ServerConfig::new(ac.get_environment(), None).unwrap();
+        let sc = ServerConfig::new(Some(ac.get_environment()), None).unwrap();
         //let l = get_server_listener(&ac, None).await;
         let l = get_server_listener(&sc).await.unwrap();
         assert_eq!(l.svr_port,3002);
@@ -69,11 +69,11 @@ mod tests_server {
 
     #[tokio::test]
     async fn test_success_listener_dsecure() {
-        build_logger("BACHUETECH", "BT.HTTP_SERVER", LogLevel::VERBOSE, LogTarget::STD_ERROR );
+        build_logger("BACHUETECH", "BT.HTTP_SERVER", LogLevel::VERBOSE, LogTarget::STD_ERROR, None );
         let app_info = AppInfo::get_app_info("AppName", "default_version", "Bachuetech", "Core Test");
         //const YML_CONTENT: &str = include_str!("../config/core/app-config.yml");         
         let ac = AppConfig::new(Some("secure".to_owned()), &app_info, None).unwrap();
-        let sc = ServerConfig::new(ac.get_environment(), None).unwrap();        
+        let sc = ServerConfig::new(Some(ac.get_environment()), None).unwrap();        
         let l = get_server_listener(&sc).await.unwrap();
         assert_eq!(l.svr_port,3003);
         assert_eq!(l.svr_secure,true);
@@ -81,11 +81,11 @@ mod tests_server {
 
     #[tokio::test]
     async fn test_success_listener_defaults() {
-        build_logger("BACHUETECH", "BT.HTTP_SERVER", LogLevel::VERBOSE, LogTarget::STD_ERROR );
+        build_logger("BACHUETECH", "BT.HTTP_SERVER", LogLevel::VERBOSE, LogTarget::STD_ERROR, None );
         let app_info = AppInfo::get_app_info("AppName", "default_version", "Bachuetech", "Core Test");
         //const YML_CONTENT: &str = include_str!("../config/core/app-config.yml");         
         let ac = AppConfig::new(Some("unknown".to_owned()), &app_info, None).unwrap();
-        let sc = ServerConfig::new(ac.get_environment(), None).unwrap();        
+        let sc = ServerConfig::new(Some(ac.get_environment()), None).unwrap();        
         let l = get_server_listener(&sc).await.unwrap();
         assert_eq!(l.svr_port,3002);
         assert_eq!(l.svr_secure,false);
