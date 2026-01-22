@@ -1,6 +1,6 @@
 # app_config.yml
 app_name: BACHUETECH HTTP SERVER
-version: v0.1.0
+version: v0.2.9
 # environment: dev
 
 dev:

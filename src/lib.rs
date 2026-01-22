@@ -31,11 +31,8 @@ pub async fn server_start(app_configuration:  &AppConfig, server_config: &Server
 
     let server = axum::serve(svr_params.svr_listener, routes).with_graceful_shutdown(graceful_shutdown(func_shutdown));
     server.await?;
-    //if let Err(err) = server.await{
-    //    log_fatal!("server_start","Web Server Error: {}", err);
-    //}else{
+
     log_info!("server_start","Good bye!");
-    //}
     Ok(())
 }
 
