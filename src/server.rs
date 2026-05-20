@@ -3,7 +3,7 @@ use std::error::Error;
 use tokio::net::TcpListener;
 
 use bt_core_config::server_config::ServerConfig;
-use bt_logger::{get_fatal, log_verbose};
+use bt_logger::log_verbose;
 //use bt_app_codes::process_exit_codes::LISTENER_TCP_BINDING_ERROR;
 
 pub(crate) struct ServerParams{
@@ -23,18 +23,18 @@ pub(crate) async fn get_server_listener(server_config: &ServerConfig) -> Result<
         },
     } ;*/
 
-    let tcp_binding_result = TcpListener::bind(server_config.get_tcp_listener()).await;
-
-    let listener = match tcp_binding_result {
+    //let tcp_binding_result = TcpListener::bind(server_config.get_tcp_listener()).await;
+    let listener = TcpListener::bind(server_config.get_tcp_listener()).await?;
+    /*let listener = match tcp_binding_result {
         Ok(result) => result,
         Err(e) => {
             //log_fatal!("get_server_listener", "Fatal Error (PEC: {}) binding TCP {}. Error: {}", LISTENER_TCP_BINDING_ERROR, server_config.get_tcp_listener(), e);
             //process::exit(LISTENER_TCP_BINDING_ERROR); // Exit the program with code -100
             return Err(get_fatal!("get_server_listener", "Fatal Error binding TCP {}. Error: {}", server_config.get_tcp_listener(), e).into())
         }
-    };
+    };*/
 
-    log_verbose!("get_server_listener", "listening on {}", listener.local_addr().unwrap()); 
+    log_verbose!("get_server_listener", "listening on {:?}", listener.local_addr()); 
     Ok(ServerParams{
         svr_listener: listener,
         svr_secure: server_config.is_secure(),
