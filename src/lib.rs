@@ -11,7 +11,7 @@ mod server;
 
 pub async fn server_start(app_configuration:  &AppConfig, server_config: &ServerConfig, routes: Router, func_shutdown: Option<fn() -> i64>) -> Result<(), Box<dyn Error>>
 {
-    log_info!("server_start","Starting {} {}",app_configuration.get_app_name(),app_configuration.get_version());
+    log_info!("","Starting {} {}",app_configuration.get_app_name(),app_configuration.get_version());
     
     //let svr_params = get_server_listener(&app_configuration).await;
     let svr_params = get_server_listener(server_config).await?;
@@ -27,12 +27,12 @@ pub async fn server_start(app_configuration:  &AppConfig, server_config: &Server
         format!("http://{}:{}{}",&hostname, &svr_params.svr_port, &app_path)
     };
     set_static_app_url(current_app_url.clone());
-    log_info!("main","Welcome to {} {}. To start open {}",app_configuration.get_app_name(),app_configuration.get_version(), &current_app_url);
+    log_info!("","Welcome to {} {}. To start open {}",app_configuration.get_app_name(),app_configuration.get_version(), &current_app_url);
 
     let server = axum::serve(svr_params.svr_listener, routes).with_graceful_shutdown(graceful_shutdown(func_shutdown));
     server.await?;
 
-    log_info!("server_start","Good bye!");
+    log_info!("","Good bye!");
     Ok(())
 }
 
@@ -97,11 +97,11 @@ async fn graceful_shutdown(func_shutdown: Option<fn() -> i64>) {
     }
 
     if result > 0 {
-        log_info!("graceful_shutdown","waiting {} ms for other tasks to finish",result);
+        log_info!("","waiting {} ms for other tasks to finish",result);
         sleep(Duration::from_millis(result.try_into().unwrap())).await;
     }
 
-    log_info!("graceful_shutdown","Shutting down server...");
+    log_info!("","Shutting down server...");
 }
 
 
@@ -120,13 +120,13 @@ pub(crate) fn generate_default_html() -> String {
 /// Arguements:
 /// f_def_html: Function to return a default html page. Must return a String with the HTML.
 pub async fn default_handler() -> impl IntoResponse { //Redirect {
-    log_trace!("handler","Default root.");
+    log_trace!("","Default root.");
     let html_txt = generate_default_html();
     Html(html_txt)
 }
 
 pub async fn fallback_root(uri: Uri) -> impl IntoResponse {
-    log_trace!("fallback", "Redirecting to default (root) page. Page not found: {}", uri);
+    log_trace!("", "Redirecting to default (root) page. Page not found: {}", uri);
     Redirect::temporary("/")
 }
 

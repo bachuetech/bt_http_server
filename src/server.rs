@@ -3,7 +3,7 @@ use std::error::Error;
 use tokio::net::TcpListener;
 
 use bt_core_config::server_config::ServerConfig;
-use bt_logger::log_verbose;
+use bt_logger::{log_info, log_verbose};
 //use bt_app_codes::process_exit_codes::LISTENER_TCP_BINDING_ERROR;
 
 pub(crate) struct ServerParams{
@@ -34,7 +34,7 @@ pub(crate) async fn get_server_listener(server_config: &ServerConfig) -> Result<
         }
     };*/
 
-    log_verbose!("get_server_listener", "listening on {:?}", listener.local_addr()); 
+    log_info!("", "listening on {:?}", listener.local_addr()); 
     Ok(ServerParams{
         svr_listener: listener,
         svr_secure: server_config.is_secure(),
