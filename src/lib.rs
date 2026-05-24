@@ -1,6 +1,7 @@
-use std::{error::Error, sync::RwLock, time::Duration};
+use std::{sync::RwLock, time::Duration};
 
 use axum::{http::Uri, response::{Html, IntoResponse, Redirect}, Router};
+use bt_any_error::any_err::AnyErr;
 use bt_core_config::{app_config::AppConfig, server_config::ServerConfig};
 use bt_logger::{log_info, log_trace};
 use server::get_server_listener;
@@ -9,7 +10,7 @@ use lazy_static::lazy_static;
 
 mod server;
 
-pub async fn server_start(app_configuration:  &AppConfig, server_config: &ServerConfig, routes: Router, func_shutdown: Option<fn() -> i64>) -> Result<(), Box<dyn Error>>
+pub async fn server_start(app_configuration:  &AppConfig, server_config: &ServerConfig, routes: Router, func_shutdown: Option<fn() -> i64>) -> Result<(), AnyErr>
 {
     log_info!("","Starting {} {}",app_configuration.get_app_name(),app_configuration.get_version());
     
