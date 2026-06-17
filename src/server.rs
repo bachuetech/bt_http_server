@@ -10,7 +10,6 @@ pub(crate) struct ServerParams{
     pub svr_port: u16,
 }
 
-
 pub(crate) async fn get_server_listener(server_config: &ServerConfig) -> Result<ServerParams, AnyErr> {
     let listener = TcpListener::bind(server_config.get_tcp_listener()).await?;
     log_info!("", "listening on {:?}", listener.local_addr()); 

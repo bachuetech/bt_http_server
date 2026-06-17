@@ -1,12 +1,12 @@
 [package]
 name = "bt_http_server"
-version = "0.3.0"
+version = "0.4.0"
 edition = "2024"
 authors = ["calvarez <calvarez@bachuetech.biz>"]
 description = "Start Application Server (HTTP Service)"
 
 [dependencies]
-axum = "0.8.9"
+axum = { version = "0.8.9", features = ["tokio"] }
 bt_any_error = "0.1.0"
 bt_core_config = { git = "https://github.com/bachuetech/bt_core_config.git", branch = "master", version = "0.4.0" }
 bt_logger = "0.5.0"

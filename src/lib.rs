@@ -1,3 +1,4 @@
+use std::net::SocketAddr;
 use std::{sync::RwLock, time::Duration};
 
 use axum::{http::Uri, response::{Html, IntoResponse, Redirect}, Router};
@@ -30,7 +31,7 @@ pub async fn server_start(app_configuration:  &AppConfig, server_config: &Server
     set_static_app_url(current_app_url.clone());
     log_info!("","Welcome to {} {}. To start open {}",app_configuration.get_app_name(),app_configuration.get_version(), &current_app_url);
 
-    let server = axum::serve(svr_params.svr_listener, routes).with_graceful_shutdown(graceful_shutdown(func_shutdown));
+    let server = axum::serve(svr_params.svr_listener, routes.into_make_service_with_connect_info::<SocketAddr>()).with_graceful_shutdown(graceful_shutdown(func_shutdown));
     server.await?;
 
     log_info!("","Good bye!");
