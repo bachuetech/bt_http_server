@@ -36,7 +36,7 @@ mod tests_server {
         build_logger("BACHUETECH", "BT.HTTP_SERVER", LogLevel::VERBOSE, LogTarget::STD_ERROR, None );
         let app_info = AppInfo::get_app_info("AppName", "default_version", "Bachuetech", "Core Test");
         //const YML_CONTENT: &str = include_str!("../config/core/app-config.yml");         
-        let ac = AppConfig::new(Some("dev".to_owned()), &app_info, None).unwrap();
+        let ac = AppConfig::new("dev", &app_info, None).unwrap();
         let sc = ServerConfig::new(Some(ac.get_environment()), None).unwrap();
         //let l = get_server_listener(&ac, None).await;
         let l = get_server_listener(&sc).await.unwrap();
@@ -50,7 +50,7 @@ mod tests_server {
         build_logger("BACHUETECH", "BT.HTTP_SERVER", LogLevel::VERBOSE, LogTarget::STD_ERROR, None );
         let app_info = AppInfo::get_app_info("AppName", "default_version", "Bachuetech", "Core Test");
         //const YML_CONTENT: &str = include_str!("../config/core/app-config.yml");         
-        let ac = AppConfig::new(Some("secure".to_owned()), &app_info, None).unwrap();
+        let ac = AppConfig::new("secure", &app_info, None).unwrap();
         let sc = ServerConfig::new(Some(ac.get_environment()), None).unwrap();        
         let l = get_server_listener(&sc).await.unwrap();
         assert_eq!(l.svr_port,3003);
@@ -62,7 +62,7 @@ mod tests_server {
         build_logger("BACHUETECH", "BT.HTTP_SERVER", LogLevel::VERBOSE, LogTarget::STD_ERROR, None );
         let app_info = AppInfo::get_app_info("AppName", "default_version", "Bachuetech", "Core Test");
         //const YML_CONTENT: &str = include_str!("../config/core/app-config.yml");         
-        let ac = AppConfig::new(Some("unknown".to_owned()), &app_info, None).unwrap();
+        let ac = AppConfig::new("unknown", &app_info, None).unwrap();
         let sc = ServerConfig::new(Some(ac.get_environment()), None).unwrap();        
         let l = get_server_listener(&sc).await.unwrap();
         assert_eq!(l.svr_port,3002);

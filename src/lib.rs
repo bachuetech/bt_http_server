@@ -161,7 +161,7 @@ mod tests_http {
         build_logger("BACHUETECH", "BT.HTTP_SERVER", LogLevel::VERBOSE, LogTarget::STD_ERROR, None );
         let app_info = AppInfo::get_app_info("AppName", "default_version", "Bachuetech", "Core Test");
         //const YML_CONTENT: &str = include_str!("../config/core/app-config.yml");          
-        let ac = AppConfig::new(Some("secure".to_owned()), &app_info, None).unwrap();
+        let ac = AppConfig::new("secure", &app_info, None).unwrap();
         let sc = ServerConfig::new(Some(ac.get_environment()), None).unwrap();          
         let r = Router::new().route("/", get(default_handler)).fallback(fallback_root);
         let s = server_start(&ac, &sc, r, None).await;
@@ -174,7 +174,7 @@ mod tests_http {
         build_logger("BACHUETECH", "BT.HTTP_SERVER", LogLevel::VERBOSE, LogTarget::STD_ERROR, None );
         let app_info = AppInfo::get_app_info("AppName", "default_version", "Bachuetech", "Core Test");
         //const YML_CONTENT: &str = include_str!("../config/core/app-config.yml");          
-        let ac = AppConfig::new(Some("secure".to_owned()), &app_info, None).unwrap();
+        let ac = AppConfig::new("secure", &app_info, None).unwrap();
         let sc = ServerConfig::new(Some(ac.get_environment()), None).unwrap();          
         let r = Router::new().route("/", get(default_handler)).fallback(fallback_root);
         let s = server_start(&ac, &sc, r, Some(func_shutdown_w_wait)).await;
@@ -187,7 +187,7 @@ mod tests_http {
         build_logger("BACHUETECH", "BT.HTTP_SERVER", LogLevel::VERBOSE, LogTarget::STD_ERROR, None );
         let app_info = AppInfo::get_app_info("AppName", "default_version", "Bachuetech", "Core Test");
         //const YML_CONTENT: &str = include_str!("../config/core/app-config.yml");           
-        let ac = AppConfig::new(Some("dev".to_owned()), &app_info, None).unwrap();
+        let ac = AppConfig::new("dev", &app_info, None).unwrap();
         let sc = ServerConfig::new(Some(ac.get_environment()), None).unwrap();         
         let r = Router::new().route("/", get(default_handler)).fallback(fallback_root);        
         let s = server_start(&ac,&sc, r, Some(func_shutdown)).await;
